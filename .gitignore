@@ -40,9 +40,7 @@ data/processed/*
 # Figures & Reports
 reports/figures/*
 !reports/figures/.gitkeep
-!reports/figures/hype_histogram.png
-!reports/figures/radar_cnbc_vs_reuters.png
-!reports/figures/echo_chamber_labeled.png
+!reports/figures/*.png
 
 # Jupyter & OS artifacts
 .ipynb_checkpoints/
