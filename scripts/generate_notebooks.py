@@ -1,12 +1,31 @@
-"""Generator script to produce all 5 Jupyter notebooks using nbformat."""
+"""Generator script to produce all 5 Jupyter notebooks using nbformat.
 
-import nbformat as nbf
+Includes:
+- Automatic path and working directory resolution (os.chdir(PROJECT_ROOT))
+- Defensive imports for optional/heavy libraries (torch, whisper, spacy)
+- Executable cells with no missing dependency hard crashes
+"""
+
 from pathlib import Path
+import nbformat as nbf
 
 NOTEBOOKS_DIR = Path(__file__).resolve().parent.parent / "notebooks"
 NOTEBOOKS_DIR.mkdir(parents=True, exist_ok=True)
 (NOTEBOOKS_DIR / "exploratory").mkdir(parents=True, exist_ok=True)
 (NOTEBOOKS_DIR / "reports").mkdir(parents=True, exist_ok=True)
+
+COMMON_PREAMBLE = (
+    "# Ensure project root is in sys.path and is current working directory\n"
+    "import os\n"
+    "import sys\n"
+    "from pathlib import Path\n\n"
+    "NOTEBOOK_DIR = Path.cwd().resolve()\n"
+    "PROJECT_ROOT = NOTEBOOK_DIR.parent if NOTEBOOK_DIR.name == 'notebooks' else NOTEBOOK_DIR\n"
+    "if str(PROJECT_ROOT) not in sys.path:\n"
+    "    sys.path.insert(0, str(PROJECT_ROOT))\n"
+    "os.chdir(PROJECT_ROOT)\n"
+    "print(f'[OK] Working directory set to project root: {PROJECT_ROOT}')\n"
+)
 
 
 def make_notebook(cells):
@@ -35,10 +54,9 @@ def build_nb_00():
             "---"
         ),
         nbf.v4.new_code_cell(
-            "# 1. Environment & Dependency Verification\n"
-            "import sys\n"
+            COMMON_PREAMBLE + "\n"
+            "# 1. Environment & Core Dependency Verification\n"
             "import platform\n"
-            "import torch\n"
             "import pandas as pd\n"
             "import numpy as np\n"
             "import networkx as nx\n"
@@ -46,18 +64,37 @@ def build_nb_00():
             "import textblob\n"
             "import feedparser\n"
             "import pyvis\n\n"
-            "print('=' * 60)\n"
-            "print('BS & HYPE ANALYZER - SYSTEM DIAGNOSTICS')\n"
-            "print('=' * 60)\n"
+            "# Defensive check for deep learning acceleration (PyTorch)\n"
+            "try:\n"
+            "    import torch\n"
+            "    torch_status = f'v{torch.__version__} (CUDA Available: {torch.cuda.is_available()})'\n"
+            "except ImportError:\n"
+            "    torch_status = 'Not installed (Optional for live audio transcription; sample audio and full NLP/graph stack 100% active)'\n\n"
+            "# Defensive check for whisper & spacy\n"
+            "try:\n"
+            "    import whisper\n"
+            "    whisper_status = 'Installed'\n"
+            "except ImportError:\n"
+            "    whisper_status = 'Not installed (Optional for live audio transcription)'\n\n"
+            "try:\n"
+            "    import spacy\n"
+            "    spacy_status = f'v{spacy.__version__}'\n"
+            "except ImportError:\n"
+            "    spacy_status = 'Not installed (Financial regex entity engine active)'\n\n"
+            "print('=' * 65)\n"
+            "print('  BS & HYPE ANALYZER - SYSTEM DIAGNOSTICS')\n"
+            "print('=' * 65)\n"
             "print(f'Python Version:    {sys.version.split()[0]} ({platform.platform()})')\n"
             "print(f'Pandas Version:    {pd.__version__}')\n"
             "print(f'NetworkX Version:  {nx.__version__}')\n"
             "print(f'Plotly Version:    {plotly.__version__}')\n"
             "print(f'Feedparser:        {feedparser.__version__}')\n"
             "print(f'PyVis:             {pyvis.__version__}')\n"
-            "print(f'PyTorch:           {torch.__version__} (CUDA Available: {torch.cuda.is_available()})')\n"
-            "print('=' * 60)\n"
-            "print('✓ All core local dependencies loaded successfully!')"
+            "print(f'PyTorch:           {torch_status}')\n"
+            "print(f'OpenAI Whisper:    {whisper_status}')\n"
+            "print(f'spaCy:             {spacy_status}')\n"
+            "print('=' * 65)\n"
+            "print('[OK] Local analytics environment verified and ready!')"
         ),
         nbf.v4.new_markdown_cell(
             "## 2. Load Master Configuration\n\n"
@@ -86,7 +123,7 @@ def build_nb_00():
             "    p.mkdir(parents=True, exist_ok=True)\n"
             "    files = list(p.glob('*.*'))\n"
             "    print(f'{label:15s} [{p}]: {len(files)} files found.')\n\n"
-            "print('\\n✓ System setup complete. Proceed to Notebook 01 for data ingestion!')"
+            "print('\\n[OK] Setup complete. Proceed to Notebook 01 for data ingestion!')"
         )
     ]
     return make_notebook(cells)
@@ -103,6 +140,7 @@ def build_nb_01():
             "---"
         ),
         nbf.v4.new_code_cell(
+            COMMON_PREAMBLE + "\n"
             "import pandas as pd\n"
             "from src.ingest import RSSIngester, YouTubeIngester, ingest_all\n\n"
             "# Ingest sample multimodal dataset (offline reproducible mode)\n"
@@ -146,7 +184,7 @@ def build_nb_01():
             "from src.config import INTERIM_DATA_DIR\n\n"
             "interim_file = INTERIM_DATA_DIR / 'ingested_articles.csv'\n"
             "df_raw.to_csv(interim_file, index=False)\n"
-            "print(f'✓ Successfully saved {len(df_raw)} records to {interim_file}')\n"
+            "print(f'[OK] Successfully saved {len(df_raw)} records to {interim_file}')\n"
             "print('Proceed to Notebook 02 for feature engineering and hype scoring!')"
         )
     ]
@@ -168,6 +206,7 @@ def build_nb_02():
             "---"
         ),
         nbf.v4.new_code_cell(
+            COMMON_PREAMBLE + "\n"
             "import pandas as pd\n"
             "from src.config import INTERIM_DATA_DIR, PROCESSED_DATA_DIR\n"
             "from src.features import HypeFeatureExtractor\n"
@@ -178,7 +217,13 @@ def build_nb_02():
             "    plot_hype_dimension_radar\n"
             ")\n\n"
             "# Load ingested data\n"
-            "df_raw = pd.read_csv(INTERIM_DATA_DIR / 'ingested_articles.csv')\n\n"
+            "interim_path = INTERIM_DATA_DIR / 'ingested_articles.csv'\n"
+            "if not interim_path.exists():\n"
+            "    from src.ingest import ingest_all\n"
+            "    df_raw = ingest_all(use_sample=True)\n"
+            "    df_raw.to_csv(interim_path, index=False)\n"
+            "else:\n"
+            "    df_raw = pd.read_csv(interim_path)\n\n"
             "# Run Feature Extraction Engine\n"
             "extractor = HypeFeatureExtractor()\n"
             "df_features = extractor.process_dataframe(df_raw)\n\n"
@@ -230,7 +275,7 @@ def build_nb_02():
         nbf.v4.new_code_cell(
             "df_features.to_parquet(PROCESSED_DATA_DIR / 'sample_features.parquet', index=False)\n"
             "df_features.to_csv(PROCESSED_DATA_DIR / 'sample_features.csv', index=False)\n"
-            "print('✓ Processed features saved to Parquet and CSV. Proceed to Notebook 03!')"
+            "print('[OK] Processed features saved to Parquet and CSV. Proceed to Notebook 03!')"
         )
     ]
     return make_notebook(cells)
@@ -251,13 +296,18 @@ def build_nb_03():
             "---"
         ),
         nbf.v4.new_code_cell(
+            COMMON_PREAMBLE + "\n"
             "import pandas as pd\n"
             "import networkx as nx\n"
             "from src.config import PROCESSED_DATA_DIR, FIGURES_DIR\n"
             "from src.graph import EchoChamberGraphBuilder\n"
             "from src.viz import plot_echo_chamber_network_plotly, export_pyvis_network_html\n\n"
             "# Load enriched features\n"
-            "df = pd.read_parquet(PROCESSED_DATA_DIR / 'sample_features.parquet')\n\n"
+            "features_path = PROCESSED_DATA_DIR / 'sample_features.parquet'\n"
+            "if features_path.exists():\n"
+            "    df = pd.read_parquet(features_path)\n"
+            "else:\n"
+            "    df = pd.read_csv(PROCESSED_DATA_DIR / 'sample_features.csv')\n\n"
             "# Build Echo-Chamber Graph\n"
             "builder = EchoChamberGraphBuilder()\n"
             "G = builder.build_outlet_graph(df, edge_threshold=0.15)\n\n"
@@ -308,7 +358,7 @@ def build_nb_03():
         ),
         nbf.v4.new_code_cell(
             "html_path = export_pyvis_network_html(G, FIGURES_DIR / 'echo_chamber_graph.html')\n"
-            "print(f'✓ PyVis graph exported to {html_path}')\n"
+            "print(f'[OK] PyVis graph exported to {html_path}')\n"
             "print('You can open this HTML file directly in any browser for interactive physics manipulation!')\n"
             "print('\\nProceed to Notebook 04 for the live executive dashboard!')"
         )
@@ -330,6 +380,7 @@ def build_nb_04():
             "---"
         ),
         nbf.v4.new_code_cell(
+            COMMON_PREAMBLE + "\n"
             "import pandas as pd\n"
             "import ipywidgets as widgets\n"
             "from IPython.display import display, HTML, clear_output\n\n"
@@ -343,10 +394,14 @@ def build_nb_04():
             "    plot_hype_dimension_radar\n"
             ")\n\n"
             "# 1. Load Precomputed Features\n"
-            "df = pd.read_parquet(PROCESSED_DATA_DIR / 'sample_features.parquet')\n"
+            "features_path = PROCESSED_DATA_DIR / 'sample_features.parquet'\n"
+            "if features_path.exists():\n"
+            "    df = pd.read_parquet(features_path)\n"
+            "else:\n"
+            "    df = pd.read_csv(PROCESSED_DATA_DIR / 'sample_features.csv')\n\n"
             "builder = EchoChamberGraphBuilder()\n"
             "G = builder.build_outlet_graph(df)\n"
-            "print(f'✓ Dashboard initialized with {len(df)} articles across {df[\"outlet\"].nunique()} outlets!')"
+            "print(f'[OK] Dashboard initialized with {len(df)} articles across {df[\"outlet\"].nunique()} outlets!')"
         ),
         nbf.v4.new_markdown_cell(
             "## 2. Live Executive Control Panel & KPI Cards\n\n"
