@@ -1,0 +1,80 @@
+# =====================================================================
+# BS & Hype Analyzer - Master Configuration File
+# 100% Local Inference & Multi-Modal Analysis Configuration
+# =====================================================================
+
+pipeline:
+  version: "1.0.0"
+  random_seed: 42
+  log_level: "INFO"
+  cache_dir: "data/interim"
+  processed_dir: "data/processed"
+
+ingestion:
+  rss:
+    config_path: "config/feeds.json"
+    timeout_sec: 15
+    max_articles_per_feed: 20
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) BSHypeAnalyzer/1.0"
+  youtube:
+    whisper_model: "small"       # tiny, base, small, medium, large
+    device: "auto"              # cpu or cuda
+    audio_format: "wav"
+    sample_rate: 16000
+    chunk_length_sec: 30
+
+hype_scoring:
+  min_hype_threshold: 0.50      # Flag threshold for high BS/Hype
+  weights:
+    superlative_density: 0.25   # Ratio of extreme adjectives/buzzwords
+    subjectivity_score: 0.25    # Sentiment subjectivity (0=objective, 1=subjective)
+    clickbait_syntax: 0.20      # Caps ratio, exclamation markers, urgency prompts
+    vague_authority: 0.15       # Unverified insider/anonymous source claims
+    unsubstantiated_claims: 0.15 # Lack of numeric/empirical citations
+  
+  buzzwords:
+    - "game-changer"
+    - "game changer"
+    - "revolutionary"
+    - "paradigm shift"
+    - "skyrocket"
+    - "to the moon"
+    - "100x"
+    - "crash"
+    - "bloodbath"
+    - "guaranteed"
+    - "secret loophole"
+    - "insiders reveal"
+    - "unprecedented"
+    - "disruptive"
+    - "miracle"
+    - "once-in-a-lifetime"
+    - "urgent warning"
+    - "massive breakout"
+    - "next nvidia"
+    - "next bitcoin"
+
+  vague_authorities:
+    - "experts warn"
+    - "analysts claim"
+    - "insiders suggest"
+    - "sources say"
+    - "everyone is talking about"
+    - "many believe"
+    - "market whispers"
+    - "some say"
+    - "rumors suggest"
+    - "top investors agree"
+
+echo_chamber:
+  edge_threshold: 0.15          # Jaccard / Cosine similarity threshold for edges
+  similarity_metric: "hybrid"   # jaccard, cosine, or hybrid (lexical + entities)
+  min_community_size: 2
+  node_size_metric: "hype_score" # hype_score, degree_centrality, or pagerank
+  layout_algorithm: "spring"    # spring, kamada_kawai, circular
+
+dashboard:
+  theme: "plotly_dark"
+  default_feed_filter: "All"
+  default_score_threshold: 0.50
+  table_page_size: 15

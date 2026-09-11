@@ -1,0 +1,50 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+
+# Data artifacts (tracked sample fixtures preserved)
+data/raw/*
+!data/raw/sample_rss_feeds.json
+!data/raw/sample_youtube_transcript.json
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/sample_features.parquet
+!data/processed/sample_features.csv
+
+# Formats & binaries
+*.pkl
+*.parquet
+*.feather
+*.arrow
+*.mp3
+*.wav
+*.m4a
+*.webm
+*.mp4
+*.html
+
+# Figures & Reports
+reports/figures/*
+!reports/figures/.gitkeep
+
+# Jupyter & OS artifacts
+.ipynb_checkpoints/
+.jupyter/
+lib/
+.DS_Store
+Thumbs.db
+*.log
