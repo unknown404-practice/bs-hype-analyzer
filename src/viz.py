@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+import re
 from typing import Any, Dict, Optional
 
 import networkx as nx
@@ -315,8 +316,12 @@ def export_pyvis_network_html(
     # Note: net.save_graph crashes on Windows with UnicodeEncodeError in cp1252
     # because pyvis does not pass encoding='utf-8'. We generate HTML and write with utf-8 explicitly.
     html_content = net.generate_html()
+    # Strip unused external Bootstrap CDN links for 100% offline self-containment
+    html_content = re.sub(r'<link[^>]*bootstrap[^>]*>', '', html_content, flags=re.IGNORECASE)
+    html_content = re.sub(r'<script[^>]*bootstrap[^>]*></script>', '', html_content, flags=re.IGNORECASE)
     target.write_text(html_content, encoding="utf-8")
     return target
+
 
 
 def display_html_in_notebook(
