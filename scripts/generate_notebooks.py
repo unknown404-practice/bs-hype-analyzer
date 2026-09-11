@@ -369,6 +369,25 @@ def build_nb_03():
 def build_nb_04():
     cells = [
         nbf.v4.new_markdown_cell(
+            "## 🎯 Problem & Impact\n\n"
+            "Sensationalized financial and technology media routinely distort market reality—using fear-mongering and "
+            "speculative euphoria to drive ad revenue and clicks at the expense of investor clarity. The **BS & Hype Analyzer** "
+            "counters this information pollution through an auditable 5-factor linguistic metric, an attributed narrative "
+            "echo-chamber graph, and an interactive real-time dashboard running 100% locally. Retail investors, risk analysts, "
+            "educators, and the public benefit from programmatic noise reduction, pinpointing circular rumor contagion before "
+            "making critical investment decisions.\n\n"
+            "---"
+        ),
+        nbf.v4.new_markdown_cell(
+            "## ▶ Start Here (Demo Instructions)\n\n"
+            "Welcome to the **BS & Hype Analyzer Executive Dashboard**. Follow these quick steps for an optimal demonstration:\n"
+            "- **Run all cells from the top**: The notebook runs instantly using precomputed local features (zero network calls or Whisper audio downloads required).\n"
+            "- **Use the 'Min hype' slider**: Dynamically filter sensational articles (default is set to **0.25**, the 70th percentile of hype intensity in the sample dataset).\n"
+            "- **Toggle outlets to compare hype**: Compare high-hype sources against objective wire baselines (the default view pre-selects the **Contrasting Trio: CNBC vs Reuters vs TechCrunch**).\n"
+            "- **Explore the Echo-Chamber Network**: Open `reports/figures/echo_chamber_graph.html` in any web browser to explore the full interactive physics simulation.\n\n"
+            "*Note: The default view already renders an engaging, non-empty contrasting subset of media items!*"
+        ),
+        nbf.v4.new_markdown_cell(
             "# 🎛️ 04 - Interactive Executive Dashboard & Hype Inspector\n\n"
             "### AI-Powered BS & Hype Analyzer — Competition Demo Notebook\n\n"
             "This interactive dashboard allows decision-makers, financial analysts, and researchers to:\n"
@@ -409,12 +428,13 @@ def build_nb_04():
         ),
         nbf.v4.new_code_cell(
             "# UI Controls\n"
-            "outlet_options = ['All'] + sorted(list(df['outlet'].unique()))\n"
+            "CONTRASTING_TRIO = 'Contrasting Trio (CNBC, Reuters, TechCrunch)'\n"
+            "outlet_options = [CONTRASTING_TRIO, 'All (Full Media Spectrum)'] + sorted(list(df['outlet'].unique()))\n"
             "category_options = ['All'] + sorted(list(df['category'].dropna().unique()))\n\n"
-            "outlet_dropdown = widgets.Dropdown(options=outlet_options, value='All', description='Outlet:', layout=widgets.Layout(width='300px'))\n"
-            "cat_dropdown = widgets.Dropdown(options=category_options, value='All', description='Category:', layout=widgets.Layout(width='300px'))\n"
-            "threshold_slider = widgets.FloatSlider(value=0.50, min=0.10, max=0.90, step=0.05, description='Hype Thresh:', continuous_update=False, layout=widgets.Layout(width='350px'))\n"
-            "search_box = widgets.Text(value='', placeholder='Search ticker, keyword (e.g. Nvidia, Bitcoin)...', description='Search:', layout=widgets.Layout(width='350px'))\n\n"
+            "outlet_dropdown = widgets.Dropdown(options=outlet_options, value=CONTRASTING_TRIO, description='Outlet Focus:', layout=widgets.Layout(width='340px'))\n"
+            "cat_dropdown = widgets.Dropdown(options=category_options, value='All', description='Category:', layout=widgets.Layout(width='280px'))\n"
+            "threshold_slider = widgets.FloatSlider(value=0.25, min=0.05, max=0.85, step=0.05, description='Min Hype:', continuous_update=False, layout=widgets.Layout(width='330px'))\n"
+            "search_box = widgets.Text(value='', placeholder='Search ticker/keyword (e.g. Nvidia, Bitcoin)...', description='Search:', layout=widgets.Layout(width='350px'))\n\n"
             "controls_row1 = widgets.HBox([outlet_dropdown, cat_dropdown])\n"
             "controls_row2 = widgets.HBox([threshold_slider, search_box])\n\n"
             "out_kpis = widgets.Output()\n"
@@ -424,7 +444,9 @@ def build_nb_04():
             "    sub_df = df.copy()\n"
             "    \n"
             "    # Filter by outlet\n"
-            "    if outlet_dropdown.value != 'All':\n"
+            "    if outlet_dropdown.value == CONTRASTING_TRIO:\n"
+            "        sub_df = sub_df[sub_df['outlet'].isin(['CNBC Markets', 'Reuters Business', 'TechCrunch AI & Startups'])]\n"
+            "    elif outlet_dropdown.value != 'All (Full Media Spectrum)':\n"
             "        sub_df = sub_df[sub_df['outlet'] == outlet_dropdown.value]\n"
             "        \n"
             "    # Filter by category\n"

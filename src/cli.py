@@ -163,6 +163,63 @@ def cmd_analyze(args: argparse.Namespace) -> None:
     print("=" * 60 + "\n")
 
 
+def cmd_run_demo(args: argparse.Namespace) -> None:
+    """Execute high-speed offline demo initialization using sample data."""
+    logger.info("Initializing demo using cached sample data (no live network/audio calls)...")
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    features_parquet = PROCESSED_DATA_DIR / "sample_features.parquet"
+    features_csv = PROCESSED_DATA_DIR / "sample_features.csv"
+
+    if features_parquet.exists():
+        df = pd.read_parquet(features_parquet)
+    elif features_csv.exists():
+        df = pd.read_csv(features_csv)
+    else:
+        logger.info("Precomputed features not found, extracting from sample data...")
+        df_raw = ingest_all(use_sample=True)
+        extractor = HypeFeatureExtractor()
+        df = extractor.process_dataframe(df_raw)
+        try:
+            df.to_parquet(features_parquet, index=False)
+        except Exception:
+            pass
+        df.to_csv(features_csv, index=False)
+
+    html_path = FIGURES_DIR / "echo_chamber_graph.html"
+    builder = EchoChamberGraphBuilder()
+    G = builder.build_outlet_graph(df)
+
+    if not html_path.exists():
+        export_pyvis_network_html(G, html_path)
+        logger.info("Exported PyVis graph to %s", html_path)
+
+    # Export Plotly HTML figures if missing
+    plotly_html = FIGURES_DIR / "network_plotly.html"
+    if not plotly_html.exists():
+        fig_net = plot_echo_chamber_network_plotly(G)
+        fig_net.write_html(str(plotly_html))
+
+    flagged = df["is_flagged"].sum() if "is_flagged" in df.columns else 0
+    pct = (flagged / len(df)) * 100 if len(df) > 0 else 0
+    mean_hype = df["hype_score"].mean() if "hype_score" in df.columns else 0.0
+
+    print("\n" + "=" * 65)
+    print("  AI-POWERED BS & HYPE ANALYZER - DEMO READY")
+    print("=" * 65)
+    print(f"Total Media Articles & Transcripts: {len(df)}")
+    print(f"Distinct Media Outlets Tracked:     {df['outlet'].nunique() if 'outlet' in df.columns else 0}")
+    print(f"High-Hype Items Flagged (>= 0.50):  {flagged} ({pct:.1f}%)")
+    print(f"Mean Hype Score Across Sample:      {mean_hype:.3f} / 1.000")
+    print(f"Echo-Chamber Graph Nodes:           {len(G.nodes)} outlets")
+    print(f"Echo-Chamber Graph Edges:           {len(G.edges)} narrative links")
+    print(f"Interactive Network File:           {html_path}")
+    print("-" * 65)
+    print("Demo ready: open notebooks/04_interactive_dashboard.ipynb in JupyterLab Desktop.")
+    print("=" * 65 + "\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Construct CLI argument parser."""
     parser = argparse.ArgumentParser(
@@ -175,8 +232,10 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_p = subparsers.add_parser("ingest", help="Ingest media feeds & transcripts")
     ingest_p.add_argument(
         "--use-sample",
+        "--sample",
         action="store_true",
         default=True,
+        dest="use_sample",
         help="Use local pre-cached sample dataset",
     )
     ingest_p.add_argument(
@@ -187,15 +246,36 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     # Features
-    subparsers.add_parser("features", help="Compute NLP features and hype scores")
+    features_p = subparsers.add_parser("features", help="Compute NLP features and hype scores")
+    features_p.add_argument(
+        "--sample",
+        action="store_true",
+        default=True,
+        help="Use sample dataset for feature extraction",
+    )
 
     # Graph
     graph_p = subparsers.add_parser("graph", help="Build echo-chamber network graph")
+    graph_p.add_argument(
+        "--sample",
+        action="store_true",
+        default=True,
+        help="Use sample dataset for graph modeling",
+    )
     graph_p.add_argument(
         "--edge-threshold",
         type=float,
         default=None,
         help="Minimum edge similarity threshold (default from config: 0.15)",
+    )
+
+    # Run Demo
+    demo_p = subparsers.add_parser("run_demo", help="Prepare and verify offline demo artifacts")
+    demo_p.add_argument(
+        "--sample",
+        action="store_true",
+        default=True,
+        help="Use precomputed sample dataset for instant demo initialization",
     )
 
     # Analyze
@@ -219,6 +299,7 @@ def main() -> None:
         "ingest": cmd_ingest,
         "features": cmd_features,
         "graph": cmd_graph,
+        "run_demo": cmd_run_demo,
         "analyze": cmd_analyze,
     }
     commands[args.command](args)

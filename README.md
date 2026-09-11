@@ -18,21 +18,90 @@
 
 ---
 
+## 🎯 Problem & Impact
+
+Sensationalized financial and technology media routinely distort market reality—using fear-mongering and speculative euphoria to drive ad revenue and clicks at the expense of investor clarity. The **BS & Hype Analyzer** counters this information pollution through an auditable 5-factor linguistic metric, an attributed narrative echo-chamber graph, and an interactive real-time dashboard running 100% locally. Retail investors, risk analysts, educators, and the general public benefit from programmatic noise reduction, pinpointing circular rumor contagion before making critical investment decisions.
+
+---
+
+## 📊 Visual Highlights
+
+<div align="center">
+
+### Figure 1: The Information Pollution Spectrum
+<img src="reports/figures/hype_histogram.png" alt="Hype Score Distribution" width="95%"/>
+<p><i>Distribution of BS & Hype scores across 151 items. Note the sharp contrast between objective wire reports (0.08), moderate corporate tech news (0.35), and speculative broadcast alerts (0.88).</i></p>
+
+<br/>
+
+### Figure 2: 5-Factor Linguistic Fingerprint (CNBC vs. Reuters)
+<img src="reports/figures/radar_cnbc_vs_reuters.png" alt="CNBC vs Reuters Radar Chart" width="75%"/>
+<p><i>Diagnostic radar comparing average scores across all 5 dimensions. Sensational broadcasting heavily spikes in superlative buzzwords, clickbait syntax, and vague anonymous sources, while wire reporting remains quantitatively grounded.</i></p>
+
+<br/>
+
+### Figure 3: Media Narrative Echo Chamber & Centrality Network
+<img src="reports/figures/echo_chamber_labeled.png" alt="Echo Chamber Network Graph" width="95%"/>
+<p><i>Force-directed network mapping circular reporting. Red nodes denote the speculative frenzy cluster (CNBC, CoinDesk, YouTube influencer), green nodes mark the institutional wire baseline (Reuters, WSJ, FT), and orange nodes represent consumer tech. Node size reflects PageRank influence.</i></p>
+
+</div>
+
+---
+
+## 🚀 Reproduce in 5 minutes
+
+Clone, set up, and launch the complete pipeline locally in under five minutes using pre-computed sample fixtures (**zero external API keys, zero network downloads, and zero Whisper audio conversions during demo**):
+
+### Option A: Standard Virtual Environment (Windows)
+```cmd
+git clone https://github.com/username/bs-hype-analyzer.git
+cd bs-hype-analyzer
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+make all
+```
+
+### Option B: macOS / Linux
+```bash
+git clone https://github.com/username/bs-hype-analyzer.git
+cd bs-hype-analyzer
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+make all
+```
+
+### Option C: Using Make Directly
+```bash
+make install
+make all
+```
+
+> **Demo Ready**: Once `make all` finishes, open [`notebooks/04_interactive_dashboard.ipynb`](notebooks/04_interactive_dashboard.ipynb) in **JupyterLab Desktop** to explore the interactive dashboard with contrasting media outlets pre-filtered!
+
+---
+
 ## 📖 Table of Contents
-1. [Project Summary](#-project-summary)
-2. [Problem Statement](#-problem-statement)
-3. [Decision Context](#-decision-context)
-4. [Data Sources](#-data-sources)
-5. [Method & Architecture](#-method--architecture)
-6. [Features & Hype Metrics](#-features--hype-metrics)
-7. [Echo-Chamber Graph](#-echo-chamber-graph)
-8. [Interactive Dashboard](#-interactive-dashboard)
-9. [Results & Sample Findings](#-results--sample-findings)
-10. [Reproduction Steps (Install + Commands)](#-reproduction-steps-install--commands)
-11. [Repository Map](#-repository-map)
-12. [Limitations & Next Steps](#-limitations--next-steps)
-13. [Demo & Screenshots](#-demo--screenshots)
-14. [Error Analysis & Edge Cases](#-error-analysis--edge-cases)
+1. [Problem & Impact](#-problem--impact)
+2. [Visual Highlights](#-visual-highlights)
+3. [Reproduce in 5 Minutes](#-reproduce-in-5-minutes)
+4. [Project Summary](#-project-summary)
+5. [Problem Statement](#-problem-statement)
+6. [Decision Context](#-decision-context)
+7. [Data Sources](#-data-sources)
+8. [Method & Architecture](#-method--architecture)
+9. [Features & Hype Metrics](#-features--hype-metrics)
+10. [Echo-Chamber Graph](#-echo-chamber-graph)
+11. [Interactive Dashboard](#-interactive-dashboard)
+12. [Results & Sample Findings](#-results--sample-findings)
+13. [Reproduction Steps (Install + Commands)](#-reproduction-steps-install--commands)
+14. [Repository Map](#-repository-map)
+15. [Limitations & Next Steps](#-limitations--next-steps)
+16. [Demo & Screenshots](#-demo--screenshots)
+17. [Error Analysis & Edge Cases](#-error-analysis--edge-cases)
 
 ---
 
