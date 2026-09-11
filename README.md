@@ -364,6 +364,13 @@ COMPOSITE HYPE SCORE  : 0.865 (Critical BS Alert ⚠️)
 ### 2. Interactive Physics Network Simulation
 The force-directed graph (saved to `reports/figures/echo_chamber_graph.html`) runs real-time physics in any browser, letting users drag nodes, inspect clusters, and trace entity citations.
 
+> **💡 JupyterLab Desktop Rendering Tip**:
+> In JupyterLab Desktop, double-clicking `.html` files in the file explorer opens raw source code in the Monaco editor, and JupyterLab's built-in *HTML Preview* disables JavaScript execution by design for security. 
+> To view the interactive visualizations:
+> - **Directly in Notebooks**: Open [notebooks/03_echo_chamber_graph.ipynb](notebooks/03_echo_chamber_graph.ipynb) or [notebooks/04_interactive_dashboard.ipynb](notebooks/04_interactive_dashboard.ipynb) (Section 4 features the **Interactive Visuals Hub**).
+> - **1-Click Browser Launch**: Click the `🌐 Open in External Browser` button inside the notebook, or run `make view-network` (`python -m src.cli view --file echo_chamber_graph.html`).
+
+
 ---
 
 ## 🔍 Error Analysis & Edge Cases

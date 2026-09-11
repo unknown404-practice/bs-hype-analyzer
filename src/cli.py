@@ -217,10 +217,47 @@ def cmd_run_demo(args: argparse.Namespace) -> None:
     print(f"Interactive Network File:           {html_path}")
     print("-" * 65)
     print("Demo ready: open notebooks/04_interactive_dashboard.ipynb in JupyterLab Desktop.")
-    print("=" * 65 + "\n")
+def cmd_view(args: argparse.Namespace) -> None:
+    """Open generated interactive HTML visualizations in default web browser."""
+    from src.viz import open_in_browser
+
+    files = {
+        "echo_chamber_graph.html": FIGURES_DIR / "echo_chamber_graph.html",
+        "network_plotly.html": FIGURES_DIR / "network_plotly.html",
+        "hype_distribution.html": FIGURES_DIR / "hype_distribution.html",
+        "outlet_comparison.html": FIGURES_DIR / "outlet_comparison.html",
+    }
+
+    target_name = args.file
+    if target_name == "all":
+        print("Opening all generated visualizations in default web browser...")
+        for name, p in files.items():
+            if p.exists():
+                print(f"  [>] Opening {name}...")
+                open_in_browser(p)
+            else:
+                print(f"  [!] {name} not found. Run 'python -m src.cli run_demo' first.")
+        return
+
+    target_path = files.get(target_name)
+    if not target_path or not target_path.exists():
+        candidate = Path(target_name)
+        if candidate.exists():
+            target_path = candidate
+        else:
+            candidate2 = FIGURES_DIR / target_name
+            if candidate2.exists():
+                target_path = candidate2
+            else:
+                print(f"[!] File not found: {target_name}. Run 'python -m src.cli run_demo' first.")
+                sys.exit(1)
+
+    print(f"[OK] Opening {target_path.name} in system default browser...")
+    open_in_browser(target_path)
 
 
 def build_parser() -> argparse.ArgumentParser:
+
     """Construct CLI argument parser."""
     parser = argparse.ArgumentParser(
         prog="bs-hype-analyzer",
@@ -283,6 +320,15 @@ def build_parser() -> argparse.ArgumentParser:
     analyze_p.add_argument("--text", type=str, required=True, help="Text to analyze")
     analyze_p.add_argument("--title", type=str, default="", help="Optional title")
 
+    # View
+    view_p = subparsers.add_parser("view", help="Open interactive HTML visualizations in your default web browser")
+    view_p.add_argument(
+        "--file",
+        type=str,
+        default="echo_chamber_graph.html",
+        help="HTML figure to view: echo_chamber_graph.html (default), network_plotly.html, hype_distribution.html, outlet_comparison.html, or 'all'",
+    )
+
     return parser
 
 
@@ -301,6 +347,7 @@ def main() -> None:
         "graph": cmd_graph,
         "run_demo": cmd_run_demo,
         "analyze": cmd_analyze,
+        "view": cmd_view,
     }
     commands[args.command](args)
 

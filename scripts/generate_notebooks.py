@@ -301,7 +301,7 @@ def build_nb_03():
             "import networkx as nx\n"
             "from src.config import PROCESSED_DATA_DIR, FIGURES_DIR\n"
             "from src.graph import EchoChamberGraphBuilder\n"
-            "from src.viz import plot_echo_chamber_network_plotly, export_pyvis_network_html\n\n"
+            "from src.viz import plot_echo_chamber_network_plotly, export_pyvis_network_html, display_html_in_notebook, open_in_browser\n\n"
             "# Load enriched features\n"
             "features_path = PROCESSED_DATA_DIR / 'sample_features.parquet'\n"
             "if features_path.exists():\n"
@@ -353,13 +353,31 @@ def build_nb_03():
             "df_edges.head(10)"
         ),
         nbf.v4.new_markdown_cell(
-            "## 4. Export Physics-Based PyVis Simulation\n\n"
-            "Generate an interactive HTML graph using PyVis with real-time ForceAtlas2 physics."
+            "## 4. Physics-Based Interactive PyVis Simulation\n\n"
+            "This section exports and renders a real-time ForceAtlas2 physics simulation of the echo chamber.\n\n"
+            "> **💡 JupyterLab Desktop Rendering Tip**:\n"
+            "> Double-clicking `.html` files in JupyterLab's file sidebar opens their raw code in the text editor, "
+            "and right-clicking *HTML Preview* disables JavaScript execution by design for security reasons. \n"
+            "> Therefore, the interactive graph is rendered **directly in the notebook output cell below** "
+            "using an isolated iframe viewer. You can also click **🌐 Open in External Browser** to manipulate it "
+            "in Google Chrome or Microsoft Edge with full GPU hardware acceleration!"
         ),
         nbf.v4.new_code_cell(
+            "import ipywidgets as widgets\n"
+            "from IPython.display import display\n\n"
             "html_path = export_pyvis_network_html(G, FIGURES_DIR / 'echo_chamber_graph.html')\n"
-            "print(f'[OK] PyVis graph exported to {html_path}')\n"
-            "print('You can open this HTML file directly in any browser for interactive physics manipulation!')\n"
+            "print(f'[OK] PyVis graph exported to: {html_path}')\n\n"
+            "# 1. Launch button for external browser (Chrome/Edge/Firefox)\n"
+            "launch_btn = widgets.Button(\n"
+            "    description='🌐 Open Interactive Simulation in External Browser',\n"
+            "    button_style='info',\n"
+            "    tooltip='Launch full-screen GPU-accelerated simulation in default browser',\n"
+            "    layout=widgets.Layout(width='380px', margin='8px 0')\n"
+            ")\n"
+            "launch_btn.on_click(lambda _b: open_in_browser(html_path))\n"
+            "display(launch_btn)\n\n"
+            "# 2. Render directly in notebook cell\n"
+            "display(display_html_in_notebook(html_path, height=650))\n"
             "print('\\nProceed to Notebook 04 for the live executive dashboard!')"
         )
     ]
@@ -384,9 +402,10 @@ def build_nb_04():
             "- **Run all cells from the top**: The notebook runs instantly using precomputed local features (zero network calls or Whisper audio downloads required).\n"
             "- **Use the 'Min hype' slider**: Dynamically filter sensational articles (default is set to **0.25**, the 70th percentile of hype intensity in the sample dataset).\n"
             "- **Toggle outlets to compare hype**: Compare high-hype sources against objective wire baselines (the default view pre-selects the **Contrasting Trio: CNBC vs Reuters vs TechCrunch**).\n"
-            "- **Explore the Echo-Chamber Network**: Open `reports/figures/echo_chamber_graph.html` in any web browser to explore the full interactive physics simulation.\n\n"
+            "- **Interactive HTML Visualizations**: In JupyterLab Desktop, double-clicking `.html` files opens the text editor and 'HTML Preview' strips JavaScript. Use Section 4 (**Interactive Visuals Hub**) below to inspect all 4 HTML figures directly inside this notebook, or click **Open in External Browser** to view in Chrome/Edge.\n\n"
             "*Note: The default view already renders an engaging, non-empty contrasting subset of media items!*"
         ),
+
         nbf.v4.new_markdown_cell(
             "# 🎛️ 04 - Interactive Executive Dashboard & Hype Inspector\n\n"
             "### AI-Powered BS & Hype Analyzer — Competition Demo Notebook\n\n"
@@ -529,7 +548,16 @@ def build_nb_04():
             "fig_net.show()"
         ),
         nbf.v4.new_markdown_cell(
-            "## 4. Key Findings, Business Narrative & Decision Context\n\n"
+            "## 4. Interactive Visuals Hub & Standalone HTML Explorer\n\n"
+            "Explore all 4 competition visualizations directly inside JupyterLab Desktop using the dropdown below, "
+            "or click **Open in External Browser** to launch them in your default browser (Chrome/Edge) at full screen."
+        ),
+        nbf.v4.new_code_cell(
+            "from src.viz import create_html_viewer_widget\n"
+            "display(create_html_viewer_widget())"
+        ),
+        nbf.v4.new_markdown_cell(
+            "## 5. Key Findings, Business Narrative & Decision Context\n\n"
             "### Executive Summary\n"
             "1. **Bimodal Information Landscape**: Financial media exhibits a sharp bimodal distribution. "
             "Institutional wire services (Reuters, WSJ, Bloomberg) cluster at hype scores below 0.25, while "

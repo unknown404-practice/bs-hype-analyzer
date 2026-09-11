@@ -256,6 +256,10 @@ def export_pyvis_network_html(
 ) -> Path:
     """Export physics-based interactive PyVis HTML network graph.
 
+    Ensures all JS and CSS dependencies are fully inlined (self-contained) and
+    written with UTF-8 encoding so it functions offline and inside sandboxed
+    iframes without missing relative path errors.
+
     Args:
         G: NetworkX graph.
         output_path: Target HTML file path. Defaults to reports/figures/echo_chamber_graph.html.
@@ -274,6 +278,7 @@ def export_pyvis_network_html(
         bgcolor="#111118",
         font_color="#FFFFFF",
         notebook=False,
+        cdn_resources="in_line",
     )
 
     for node, data in G.nodes(data=True):
@@ -307,8 +312,133 @@ def export_pyvis_network_html(
     }
     """)
 
-    net.save_graph(str(target))
+    # Note: net.save_graph crashes on Windows with UnicodeEncodeError in cp1252
+    # because pyvis does not pass encoding='utf-8'. We generate HTML and write with utf-8 explicitly.
+    html_content = net.generate_html()
+    target.write_text(html_content, encoding="utf-8")
     return target
+
+
+def display_html_in_notebook(
+    html_path_or_content: Any,
+    height: int = 650,
+    width: str = "100%",
+) -> Any:
+    """Display an HTML file or HTML string inside an isolated, script-enabled iframe.
+
+    Works seamlessly in JupyterLab Desktop, Jupyter Notebook, and exported reports
+    without server routing issues or CSP script blocking.
+
+    Args:
+        html_path_or_content: Path to the HTML file or raw HTML string.
+        height: Iframe height in pixels.
+        width: Iframe width (default '100%').
+
+    Returns:
+        IPython.display.HTML object containing the embedded iframe.
+    """
+    import html as html_lib
+    import warnings
+    from IPython.display import HTML
+
+    path = Path(html_path_or_content)
+    if path.is_file():
+        raw_html = path.read_text(encoding="utf-8")
+    else:
+        raw_html = str(html_path_or_content)
+
+    escaped = html_lib.escape(raw_html, quote=True)
+    iframe_code = (
+        f'<iframe srcdoc="{escaped}" '
+        f'style="width: {width}; height: {height}px; border: 1px solid #2e3440; '
+        f'border-radius: 8px; background: #111118;" '
+        f'sandbox="allow-scripts allow-same-origin allow-popups"></iframe>'
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return HTML(iframe_code)
+
+
+def open_in_browser(html_path: Any) -> bool:
+    """Open an HTML file directly in the system default web browser.
+
+    Args:
+        html_path: Path to HTML file.
+
+    Returns:
+        True if launched successfully, False otherwise.
+    """
+    import webbrowser
+
+    p = Path(html_path).resolve()
+    if not p.exists():
+        logger.warning("HTML file not found: %s", p)
+        return False
+    return webbrowser.open(p.as_uri())
+
+
+def create_html_viewer_widget(
+    initial_file: str = "echo_chamber_graph.html",
+) -> Any:
+    """Create an interactive ipywidget selector for viewing generated HTML reports.
+
+    Provides dropdown switching between generated visualizations and a 1-click
+    button to launch in the system's default web browser.
+    """
+    import ipywidgets as widgets
+    from IPython.display import clear_output, display
+
+    available_files = {
+        "Echo Chamber Network (PyVis Physics)": FIGURES_DIR / "echo_chamber_graph.html",
+        "Echo Chamber Network (Plotly 2D)": FIGURES_DIR / "network_plotly.html",
+        "Hype Score Distribution": FIGURES_DIR / "hype_distribution.html",
+        "Media Outlets Ranking": FIGURES_DIR / "outlet_comparison.html",
+    }
+
+    file_dropdown = widgets.Dropdown(
+        options=list(available_files.keys()),
+        value="Echo Chamber Network (PyVis Physics)" if "Echo Chamber Network (PyVis Physics)" in available_files else list(available_files.keys())[0],
+        description="Visualization:",
+        layout=widgets.Layout(width="380px"),
+    )
+
+    btn_browser = widgets.Button(
+        description="Open in External Browser",
+        button_style="info",
+        tooltip="Open current visualization in Chrome/Edge/Firefox",
+        icon="external-link",
+        layout=widgets.Layout(width="220px"),
+    )
+
+    viewer_output = widgets.Output()
+
+    def render_selected() -> None:
+        selected_name = file_dropdown.value
+        path = available_files.get(selected_name)
+        with viewer_output:
+            clear_output(wait=True)
+            if path and path.exists():
+                display(display_html_in_notebook(path, height=650))
+            else:
+                display(widgets.HTML(f"<p style='color:#EF553B;'>File not found yet: {path}. Run pipeline or cli to generate.</p>"))
+
+    def on_dropdown_change(change: Any) -> None:
+        if change.get("type") == "change" and change.get("name") == "value":
+            render_selected()
+
+    def on_button_click(_b: Any) -> None:
+        selected_name = file_dropdown.value
+        path = available_files.get(selected_name)
+        if path and path.exists():
+            open_in_browser(path)
+
+    file_dropdown.observe(on_dropdown_change)
+    btn_browser.on_click(on_button_click)
+
+    controls = widgets.HBox([file_dropdown, btn_browser], layout=widgets.Layout(margin="10px 0"))
+    render_selected()
+    return widgets.VBox([controls, viewer_output])
+
 
 
 def plot_hype_dimension_radar(row: Dict[str, Any]) -> go.Figure:

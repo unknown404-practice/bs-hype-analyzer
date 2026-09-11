@@ -1,7 +1,8 @@
 # Makefile for BS & Hype Analyzer (Windows & Cross-Platform Friendly)
 PYTHON ?= python
 
-.PHONY: help install lint format test ingest features graph dashboard all clean
+.PHONY: help install lint format test ingest features graph dashboard view-network view-all all clean
+
 
 help:
 	@echo =================================================================
@@ -15,8 +16,11 @@ help:
 	@echo   features   : Extract 5-factor NLP features & compute hype scores
 	@echo   graph      : Generate narrative echo-chamber graph and HTML figures
 	@echo   dashboard  : Instructions to launch JupyterLab interactive dashboard
+	@echo   view-network: Open interactive PyVis network in default web browser
+	@echo   view-all   : Open all 4 HTML visualizations in default web browser
 	@echo   all        : Run test suite, initialize demo data, and verify readiness
 	@echo   clean      : Remove temporary caches and interim build files
+
 
 install:
 	$(PYTHON) -m pip install -r requirements.txt
@@ -42,6 +46,12 @@ graph:
 
 dashboard:
 	@echo Open notebooks/04_interactive_dashboard.ipynb in JupyterLab Desktop to interact with the live dashboard.
+
+view-network:
+	$(PYTHON) -m src.cli view --file echo_chamber_graph.html
+
+view-all:
+	$(PYTHON) -m src.cli view --file all
 
 all: test
 	$(PYTHON) -m src.cli run_demo --sample
