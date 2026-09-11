@@ -22,6 +22,42 @@ With this tool, you can instantly see which outlets produce the most sensational
 
 ---
 
+## 🏗️ Project Architecture
+
+The system is structured as a decoupled 4-tier pipeline where raw multi-modal media flows into quantified linguistic features, graph-theoretic clusters, and decision dashboards:
+
+```mermaid
+flowchart TD
+    subgraph T1["Tier 1: Multi-Modal Ingestion (src/ingest.py)"]
+        direction TB
+        R["RSS Feeds (10 Outlets)"] -->|"Sanitize (BeautifulSoup4)"| C1["Interim Dataset<br/>data/interim/ingested_articles.csv"]
+        Y["YouTube Audio Tracks"] -->|"Local STT (OpenAI Whisper)"| C1
+    end
+
+    subgraph T2["Tier 2: NLP Feature Scoring (src/features.py)"]
+        direction TB
+        C1 --> F["5-Factor Hype Metric Engine<br/>Superlatives · Subjectivity · Clickbait · Vague Authority · Grounding"]
+        F --> P["Processed Datasets<br/>data/processed/sample_features.parquet"]
+    end
+
+    subgraph T3["Tier 3: Echo-Chamber Graph (src/graph.py)"]
+        direction TB
+        P --> G["NetworkX Attributed Graph<br/>Entity Jaccard Overlap + Greedy Modularity + PageRank"]
+        G --> M["Graph Topologies<br/>echo_graph_nodes.csv & edges.csv"]
+    end
+
+    subgraph T4["Tier 4: Presentation & UI (src/viz.py, src/cli.py)"]
+        direction TB
+        M --> V1["JupyterLab Desktop HTML Tabs<br/>notebooks/view_html_reports.ipynb"]
+        M --> V2["Executive Dashboard<br/>notebooks/04_interactive_dashboard.ipynb"]
+        P --> V3["Sub-Second CLI<br/>python -m src.cli analyze"]
+    end
+```
+
+For full mathematical and pipeline details, see **[docs/architecture.md](docs/architecture.md)** and **[docs/metrics.md](docs/metrics.md)**.
+
+---
+
 ## 🚀 Quickstart (5 minutes)
 
 Follow these steps to run the complete pipeline with pre-cached benchmark data on Windows, macOS, or Linux:
@@ -79,11 +115,45 @@ Open **`notebooks/04_interactive_dashboard.ipynb`** in **JupyterLab Desktop** an
 - **Echo-Chamber Graph**: Media outlets are linked by named entity Jaccard overlap and shared content n-grams; modularity clustering reveals narrative subcultures, while PageRank pinpoints central media epicenters.
 - **Multi-Modal Ingestion**: Financial RSS feeds and YouTube influencer audio tracks are ingested and transcribed locally with Whisper STT on CPU/GPU.
 
-For full architectural and mathematical details, see **[docs/architecture.md](docs/architecture.md)** and **[docs/metrics.md](docs/metrics.md)**.
-
 ---
 
-## 📁 Repository structure
+## 📁 Project Structure
+
+The complete repository hierarchy, directory roles, and data pipeline flow:
+
+```mermaid
+graph TD
+    Root["bs-hype-analyzer/"]
+    
+    Root --> Config["config/"]
+    Config --> C1["feeds.json (10 Curated Outlets)"]
+    Config --> C2["hype_config.yaml (Scoring Weights & Thresholds)"]
+
+    Root --> Data["data/"]
+    Data --> D1["raw/ (Cached RSS Feeds & YouTube Transcripts)"]
+    Data --> D2["interim/ (Normalized Articles CSV)"]
+    Data --> D3["processed/ (sample_features.parquet & Graph CSVs)"]
+
+    Root --> Src["src/"]
+    Src --> S1["config.py (Typed Dataclasses)"]
+    Src --> S2["ingest.py (RSS & Whisper STT)"]
+    Src --> S3["features.py (5-Factor Metric Engine)"]
+    Src --> S4["graph.py (NetworkX & PageRank)"]
+    Src --> S5["viz.py (Plotly & PyVis Offline Engine)"]
+    Src --> S6["cli.py (Click Terminal Interface)"]
+
+    Root --> Notebooks["notebooks/"]
+    Notebooks --> N1["00–04 (End-to-End Pipeline & Dashboard)"]
+    Notebooks --> N2["view_html_reports.ipynb (Native 4-in-1 HTML Viewer)"]
+
+    Root --> Reports["reports/"]
+    Reports --> R1["figures/ (HTML Simulations & PNG Assets)"]
+    Reports --> R2["demo_script.md (3.5-Min Video Storyboard)"]
+
+    Root --> Tests["tests/ (22/22 Passing Pytest Suite)"]
+    Root --> Docs["docs/ (architecture.md, metrics.md, structure.md)"]
+    Root --> Meta["Root: Makefile, requirements.txt, LICENSE, README.md"]
+```
 
 ```text
 ├── config/              # YAML & JSON configuration for feeds and hype hyperparameters
@@ -95,7 +165,7 @@ For full architectural and mathematical details, see **[docs/architecture.md](do
 └── tests/               # Pytest suite with 22 unit tests (100% passing)
 ```
 
-For a complete folder and file breakdown, see **[docs/structure.md](docs/structure.md)**.
+For a complete module-by-module breakdown, see **[docs/structure.md](docs/structure.md)**.
 
 ---
 
