@@ -1,10 +1,13 @@
-"""Script to execute and smoke-test all 5 Jupyter notebooks end-to-end."""
+"""Script to execute and smoke-test all 6 Jupyter notebooks end-to-end."""
 
 import os
 import sys
 from pathlib import Path
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 NOTEBOOKS_DIR = PROJECT_ROOT / "notebooks"
@@ -15,6 +18,7 @@ NOTEBOOKS = [
     "02_feature_engineering_and_hype_scores.ipynb",
     "03_echo_chamber_graph.ipynb",
     "04_interactive_dashboard.ipynb",
+    "view_html_reports.ipynb",
 ]
 
 def run_smoke_tests():
@@ -34,7 +38,6 @@ def run_smoke_tests():
             
         try:
             # Execute notebook with working directory set to notebooks/
-            # (simulating exact JupyterLab Desktop behavior)
             ep.preprocess(nb, {"metadata": {"path": str(NOTEBOOKS_DIR)}})
             
             # Save executed notebook with rendered outputs
@@ -44,8 +47,9 @@ def run_smoke_tests():
             print(f"[PASS] {nb_name} completed with 0 errors! Outputs saved.")
             results[nb_name] = "PASS"
         except Exception as e:
-            print(f"[FAIL] {nb_name} failed with error: {e}")
-            results[nb_name] = f"FAIL: {e}"
+            err_msg = str(e).encode('ascii', errors='replace').decode('ascii')
+            print(f"[FAIL] {nb_name} failed with error: {err_msg}")
+            results[nb_name] = f"FAIL"
             
     print("\n" + "=" * 65)
     print("  SMOKE TEST SUMMARY")
@@ -58,11 +62,11 @@ def run_smoke_tests():
             
     print("=" * 65)
     if all_passed:
-        print("[SUCCESS] All 5 notebooks executed cleanly with 0 errors!")
-        sys.exit(0)
+        print("[SUCCESS] All notebooks executed cleanly with 0 errors!\n")
+        return 0
     else:
-        print("[ERROR] One or more notebooks failed.")
-        sys.exit(1)
+        print("[ERROR] Some notebooks failed execution. Please review errors above.\n")
+        return 1
 
 if __name__ == "__main__":
-    run_smoke_tests()
+    sys.exit(run_smoke_tests())
